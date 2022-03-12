@@ -1,4 +1,4 @@
-# Ghidra HuC6280 Proccessor module
+# Ghidra HuC6280 Processor module
 
 Install
 -------
@@ -13,6 +13,6 @@ Load PCEngine Logical RAM dump (64Kb) Format as Raw Binary, choose HuC6280 Langu
 Known Issues
 ------------
 
-Few memory block conflict but dissassembly works.
+Few memory block conflict but disassembly works.
 Zero Page reference seen as full address 0x20XX instead of usual $XX
 Now CD System symbols is default on MPR7, PCEngine dump memory configuration should be configurable (HuC Card, CD, PSG)
