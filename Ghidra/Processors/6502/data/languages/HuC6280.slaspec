@@ -147,9 +147,9 @@ OP1: imm16,X    is bbb=7 & X; imm16    { tmp:2 = imm16 + zext(X); export *:1 tmp
 # Absolute Indexed Y
 OP1: imm16,Y    is bbb=6 & Y; imm16    { tmp:2 = imm16 + zext(Y); export *:1 tmp; }
 # Indirect X
-OP1: (imm8,X)   is bbb=0 & X; imm8     { addr:2 = zext(imm8 + X); tmp:2 = *:2 addr; export *:1 tmp; }
+OP1: (imm8,X)   is bbb=0 & X; imm8     { zpaddr:2 = zext(0x2000 + imm8 + X); tmp:2 = *:2 zpaddr; export *:1 tmp; }
 # Indirect Y
-OP1: (imm8),Y   is bbb=4 & Y; imm8     { addr:2 = imm8; tmp:2 = *:2 addr; tmp = tmp + zext(Y); export *:1 tmp; }
+OP1: (imm8),Y   is bbb=4 & Y; imm8     { zpaddr:2 = 0x2000 + imm8; tmp:2 = *:2 zpaddr; tmp = tmp + zext(Y); export *:1 tmp; }
 
 # Immediate
 OP2: "#"imm8    is bbb=0; imm8         { tmp:1 = imm8; export tmp; }
