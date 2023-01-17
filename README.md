@@ -3,7 +3,7 @@
 Install
 -------
 
-Copy Ghidra directory into your Ghidra folder (exp.: ghidra_10.1.2_PUBLIC/Ghidra/), 6502.ldef will be overwritten
+Copy Ghidra directory into your Ghidra folder (exp.: ghidra_10.1.2_PUBLIC/Ghidra/).
 
 Usage
 -----
