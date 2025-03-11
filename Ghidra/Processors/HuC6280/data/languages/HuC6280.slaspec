@@ -16,6 +16,12 @@ define register offset=0x0000 size=1 [VDC_ST0];
 define register offset=0x0002 size=1 [VDC_ST1];
 define register offset=0x0003 size=1 [VDC_ST2];
 
+define pcodeop vram_write;
+define pcodeop memcpy_bw;
+define pcodeop vram_read;
+define pcodeop memcpy;
+define pcodeop io_write;
+
 #TOKENS
 
 define token opbyte (8)
@@ -171,7 +177,7 @@ OP2LD: imm8,Y   is bbb=5 & Y; imm8     { tmp:2 = zext(imm8 + Y); zpaddr:2 = 0x20
 OP2LD: imm16,Y  is bbb=7 & Y; imm16    { tmp:2 = imm16 + zext(Y); export *:1 tmp; }
 
 
-ADDR8:  imm8    is imm8                { export *:1 imm8; }
+#ADDR8:  imm8    is imm8                { export *:1 imm8; }
 ADDR16: imm16   is imm16               { export *:1 imm16; }
 ADDRI:  imm16   is imm16               { tmp:2 = imm16; export *:2 tmp; }
 
@@ -276,7 +282,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
 :AND OP1    is (cc=1 & aaa=1) ... & OP1
 {
     if (T == 1) goto <Ton>;
-    A = A & OP1; 
+    A = A & OP1;
     resultFlags(A);
     goto <end>;
 <Ton>
@@ -477,7 +483,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
 }
 
 :CMP OP1    is (cc=1 & aaa=6) ... & OP1
-{ 
+{
     T = 0;
     local op1 = OP1;
     local tmp = A - op1;
@@ -553,7 +559,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
 }
 
 :EOR OP1    is (cc=1 & aaa=2) ... & OP1
-{ 
+{
     local op1 = OP1;
     if (T == 1) goto <isT>;
 #HuC6280 legacy 6502
@@ -639,7 +645,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
 {
     T = 0;
     *:2 (SP-1) = inst_next;
-    SP=SP-2; 
+    SP=SP-2;
     call ADDR16;
 }
 
@@ -679,7 +685,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     tmp = tmp >> 1;
     OP2 = tmp;
     Z = (tmp == 0);
-    N = 0;	
+    N = 0;
 }
 
 :NOP    is op=0xEA
@@ -692,14 +698,14 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = OP1;
     if (T == 1) goto <isT>;
 #HuC6280 legacy 6502
-    A = A | op1; 
+    A = A | op1;
     resultFlags(A);
     goto <end>;
 <isT> #HuC6280 ZeroPage addressed
     T = 0;
     local addr:2 = 0x2000 + zext(X);
     local mxval = *:1 addr;
-    mxval = A | op1; 
+    mxval = A | op1;
     resultFlags(mxval);
     *:1 addr = mxval;
 <end>
@@ -710,14 +716,14 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = ZIOP;
     if (T == 1) goto <isT>;
 #HuC6280 legacy 6502
-    A = A | op1; 
+    A = A | op1;
     resultFlags(A);
     goto <end>;
 <isT> #HuC6280 ZeroPage addressed
     T = 0;
     local addr:2 = 0x2000 + zext(X);
     local mxval = *:1 addr;
-    mxval = A | op1; 
+    mxval = A | op1;
     resultFlags(mxval);
     *:1 addr = mxval;
 <end>
@@ -856,7 +862,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = OP1;
     if (D == 1) goto <isD>;
     local result = A - op1 - !C;
-    
+
     subtraction_flags1(A, op1, result);
     A = result;
     goto <end>;
@@ -866,7 +872,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     bcd_add(op1,complement9,result2);
     result2 = result2+1;
     subtraction_flags1(A, op1, result2);
-    A = result2; 
+    A = result2;
 <end>
 }
 
@@ -876,7 +882,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = ZIOP;
     if (D == 1) goto <isD>;
     local result = A - op1 - !C;
-    
+
     subtraction_flags1(A, op1, result);
     A = result;
     goto <end>;
@@ -886,7 +892,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     bcd_add(op1,complement9,result2);
     result2 = result2+1;
     subtraction_flags1(A, op1, result2);
-    A = result2; 
+    A = result2;
 <end>
 }
 
@@ -1000,37 +1006,12 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     X = tmp;
 }
 
-:TAI src16, dst16, lng16   is op=0xF3 ; src16; dst16; lng16  #Transfer Alternate Increment
+:TAI src16, dst16, lng16 is op=0xF3; src16; dst16; lng16
 {
-    *:1 (SP) = Y;  #push Y
-    SP = SP - 1;
-    *:1 (SP) = A;  #push A
-    SP = SP - 1;
-    *:1 (SP) = X;  #push X
-    SP = SP - 1;
-    T = 0;
-    local src:2 = src16;
-    local dst:2 = dst16;
-    local lng:2 = lng16;
-    local value:1 = 0;
-    local alt:1 = 0;
-<loop>
-    src = src + zext(alt);
-    value = *:1 src;
-    *:1 dst = value;
-    dst = dst + 1;
-    lng = lng - 1;
-    alt = !alt;
-    if (lng != 0) goto <loop>;
-    SP = SP + 1;  #pull X
-    X = *:1 (SP);
-    resultFlags(X);
-    SP = SP + 1;  #pull A
-    A = *:1 (SP);  
-    resultFlags(A);
-    SP = SP + 1;  #pull Y
-    Y = *:1 (SP);
-    resultFlags(Y);
+   local s:2 = src16;
+   local d:2 = dst16;
+   local l:2 = lng16;
+   vram_read(*:1 s, *:1 d, l);
 }
 
 :TAM imm8    is op=0x53 ; imm8
@@ -1085,129 +1066,36 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     resultFlags(Y);
 }
 
-:TDD src16, dst16, lng16   is op=0xC3 ; src16; dst16; lng16    #Transfer Decrement Decrement
+:TDD src16, dst16, lng16   is op=0xC3; src16; dst16; lng16     #Transfer Decrement Decrement
 {
-    *:1 (SP) = Y;  #push Y
-    SP = SP - 1;
-    *:1 (SP) = A;  #push A
-    SP = SP - 1;
-    *:1 (SP) = X;  #push X
-    SP = SP - 1;
-    T = 0;
-    local src:2 = src16;
-    local dst:2 = dst16;
-    local lng:2 = lng16;
-    local value:1 = 0;
-<loop>
-    value = *:1 src;
-    *:1 dst = value;
-    src = src - 1;
-    dst = dst - 1;
-    lng = lng - 1;
-    if (lng != 0) goto <loop>;
-    SP = SP + 1;  #pull X
-    X = *:1 (SP);
-    resultFlags(X);
-    SP = SP + 1;  #pull A
-    A = *:1 (SP);  
-    resultFlags(A);
-    SP = SP + 1;  #pull Y
-    Y = *:1 (SP);
-    resultFlags(Y);
+   local s:2 = src16;
+   local d:2 = dst16;
+   local l:2 = lng16;
+   memcpy_bw(*:1 s, *:1 d, l);
 }
 
-:TIA src16, dst16, lng16   is op=0xE3 ; src16; dst16; lng16 #Transfer Increment Alternate
+:TIA src16, dst16, lng16   is op=0xE3; src16; dst16; lng16  #Transfer Increment Alternate
 {
-    *:1 (SP) = Y;  #push Y
-    SP = SP - 1;
-    *:1 (SP) = A;  #push A
-    SP = SP - 1;
-    *:1 (SP) = X;  #push X
-    SP = SP - 1;
-    T = 0;
-    local src:2 = src16;
-    local dst:2 = dst16;
-    local lng:2 = lng16;
-    local value:1 = 0;
-    local alt:1 = 0;
-<loop>
-    value = *:1 src;
-    dst = dst + zext(alt);
-    *:1 dst = value;
-    src = src + 1;
-    lng = lng - 1;
-    alt = !alt;
-    if (lng != 0) goto <loop>;
-    SP = SP + 1;  #pull X
-    X = *:1 (SP);
-    resultFlags(X);
-    SP = SP + 1;  #pull A
-    A = *:1 (SP);  
-    resultFlags(A);
-    SP = SP + 1;  #pull Y
-    Y = *:1 (SP);
-    resultFlags(Y);
+   local s:2 = src16;
+   local d:2 = dst16;
+   local l:2 = lng16;
+   vram_write(*:1 s, *:1 d, l);
 }
 
-:TII src16, dst16, lng16   is op=0x73 ; src16; dst16; lng16 #Transfer Increment Increment
+:TII src16, dst16, lng16   is op=0x73; src16; dst16; lng16  #Transfer Increment Increment
 {
-    *:1 (SP) = Y;  #push Y
-    SP = SP - 1;
-    *:1 (SP) = A;  #push A
-    SP = SP - 1;
-    *:1 (SP) = X;  #push X
-    SP = SP - 1;
-    T = 0;
-    local src:2 = src16;
-    local dst:2 = dst16;
-    local lng:2 = lng16;
-    local value:1 = 0;
-<loop>
-    value = *:1 src;
-    *:1 dst = value;
-    src = src + 1;
-    dst = dst + 1;
-    lng = lng - 1;
-    if (lng != 0) goto <loop>;
-    SP = SP + 1;  #pull X
-    X = *:1 (SP);
-    resultFlags(X);
-    SP = SP + 1;  #pull A
-    A = *:1 (SP);  
-    resultFlags(A);
-    SP = SP + 1;  #pull Y
-    Y = *:1 (SP);
-    resultFlags(Y);
+   local s:2 = src16;
+   local d:2 = dst16;
+   local l:2 = lng16;
+   memcpy(*:1 s, *:1 d, l);
 }
 
-:TIN src16, dst16, lng16   is op=0xD3 ; src16; dst16; lng16 #Transfer Increment
+:TIN src16, dst16, lng16   is op=0xD3; src16; dst16; lng16  #Transfer Increment
 {
-    *:1 (SP) = Y;  #push Y
-    SP = SP - 1;
-    *:1 (SP) = A;  #push A
-    SP = SP - 1;
-    *:1 (SP) = X;  #push X
-    SP = SP - 1;
-    T = 0;
-    local src:2 = src16;
-    local dst:2 = dst16;
-    local lng:2 = lng16;
-    local value:1 = 0;
-<loop>
-    value = *:1 src;
-    *:1 dst = value;
-    src = src + 1;
-    lng = lng - 1;
-    if (lng != 0) goto <loop>;
-    SP = SP + 1;  #pull X
-    X = *:1 (SP);
-    resultFlags(X);
-    SP = SP + 1;  #pull A
-    A = *:1 (SP);  
-    resultFlags(A);
-    SP = SP + 1;  #pull Y
-    Y = *:1 (SP);
-    resultFlags(Y);
+   local s:2 = src16;
+   local d:2 = dst16;
+   local l:2 = lng16;
+   io_write(*:1 s, *:1 d, l);
 }
 
 :TMA imm8    is op=0x43 ; imm8
@@ -1254,8 +1142,8 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = OPTB;
     local result = op1 & ~A;
     Z = (result == 0);
-    N = op1[7,1];
-    V = op1[6,1];
+    N = (result & 0x80) != 0;
+    V = (result & 0x40) != 0;
     T = 0;
 }
 
@@ -1265,8 +1153,8 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     local op1 = OPTB;
     local result = A | op1;
     Z = (result == 0);
-    N = op1[7,1];
-    V = op1[6,1];
+    N = (result & 0x80) != 0;
+    V = (result & 0x40) != 0;
     T = 0;
 }
 
@@ -1297,7 +1185,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     T = 0;
 }
 
-:TST "#"imm82, imm16    is op=0x93; imm16; imm82
+:TST "#"imm82, imm16    is op=0x93; imm82; imm16
 {
     T = 0;
     local tmp:2 = imm16;
@@ -1310,7 +1198,7 @@ ADDRIX: (imm16,X) is X; imm16          { addr:2 = imm16 + zext(X); tmp:2 = *:2 a
     T = 0;
 }
 
-:TST "#"imm82, imm16,X    is op=0xB3 & X; imm16; imm82
+:TST "#"imm82, imm16,X    is op=0xB3 & X; imm82; imm16
 {
     T = 0;
     local tmp:2 = imm16 + zext(X);
